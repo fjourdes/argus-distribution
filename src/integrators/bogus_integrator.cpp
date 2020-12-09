@@ -2,11 +2,13 @@
 // Created by jie on 9/7/18.
 //
 
-#include "log.hpp"
+#include <log.hpp>
+#include <magic.hpp>
+#include <util.hpp>
 #include "bogus_integrator.h"
-#include "SolverOptions.hh"
-#include "ClothFrictionSolver.hh"
-#include "ClothFrictionData.hh"
+#include <SolverOptions.hh>
+#include <ClothFrictionSolver.hh>
+#include <ClothFrictionData.hh>
 
 #include <bogus/Core/Block.io.hpp>
 #include <bogus/Core/Block.impl.hpp>

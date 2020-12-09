@@ -94,7 +94,7 @@ void Drawable::draw(bool showMesh) {
     glDrawElements(GL_TRIANGLES, fSize*3, GL_UNSIGNED_INT, (void*)0);
 
     if (showMesh) {
-        float frameColors[vSize*3];
+        float* frameColors{ new float[vSize*3]{} };
         for (int v = 0; v < vSize; v++) {
             for (int i = 0; i < 3; i++) {
                 frameColors[v*3 + i] = frameColor[i];
@@ -106,6 +106,8 @@ void Drawable::draw(bool showMesh) {
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawElements(GL_TRIANGLES, fSize*3, GL_UNSIGNED_INT, (void*)0);
+
+        delete[] frameColors;
     }
     
 //    glDrawElements(GL_LINES, lSize*2, GL_UNSIGNED_INT, (void*)(fSize*3*sizeof(int)));

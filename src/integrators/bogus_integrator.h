@@ -4,12 +4,13 @@
 
 #ifndef ARGUS_DISTRIBUTION_BOGUS_INTEGRATOR_H
 #define ARGUS_DISTRIBUTION_BOGUS_INTEGRATOR_H
-#include "integrator.h"
-#include "sparse.hpp"
-#include "collision.hpp"
-#include "magic.hpp"
 
-class BogusIntegrator : public Integrator {
+
+#include "integrator.h"
+#include <sparse.hpp>
+#include <collision.hpp>
+
+class ARGUS_INTEGRATOR_API BogusIntegrator : public Integrator {
 public:
 
     vector<pair<arcsim::Vec3, arcsim::Vec3> >  solve(const arcsim::SpMat<arcsim::Mat3x3> &A, const vector<arcsim::Vec3> &b, vector<arcsim::Vec3> &linear_v,

@@ -3,12 +3,14 @@
 //
 
 #include "arcsim_application.h"
-#include "io.hpp"
-#include "simulation.hpp"
-#include "conf.hpp"
-#include "log.hpp"
-#include "simulators/arc_simulator.h"
-#include "integrators/bogus_integrator.h"
+#include <io.hpp>
+#include <simulation.hpp>
+#include <conf.hpp>
+#include <log.hpp>
+#include <util.hpp>
+#include <magic.hpp>
+#include <simulators/arc_simulator.h>
+#include <integrators/bogus_integrator.h>
 
 namespace applications {
 

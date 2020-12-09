@@ -10,7 +10,7 @@
 
 namespace display {
 
-    class Shader {
+    class ARGUS_DISPLAY_API Shader {
     public:
 
         Shader();

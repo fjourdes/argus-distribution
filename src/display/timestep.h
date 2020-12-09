@@ -7,8 +7,10 @@
 
 #include "drawable.h"
 
+
+
 namespace display {
-    class Timestep {
+    class ARGUS_DISPLAY_API Timestep {
     protected:
         Drawable clothDrawable;
         Drawable obstacleDrawable;

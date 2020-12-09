@@ -6,12 +6,27 @@
 #define ARGUS_DISTRIBUTION_SIMULATOR_H
 
 #include <memory>
-#include "integrators/integrator.h"
-#include "display/timestep.h"
+#include <integrators/integrator.h>
+#include <display/timestep.h>
+
+#ifndef WIN32
+#	define ARGUS_SIMULATION_EXPORT_DYNAMIC_LIBRARY
+#   define ARGUS_SIMULATION_IMPORT_DYNAMIC_LIBRARY
+#else
+#	define ARGUS_SIMULATION_EXPORT_DYNAMIC_LIBRARY __declspec( dllexport )
+#   define ARGUS_SIMULATION_IMPORT_DYNAMIC_LIBRARY __declspec( dllimport )
+#endif
+
+
+#ifdef BUILD_ARGUS_SIMULATORS
+#	define ARGUS_SIMULATION_API ARGUS_SIMULATION_EXPORT_DYNAMIC_LIBRARY
+#else
+#	define ARGUS_SIMULATION_API ARGUS_SIMULATION_IMPORT_DYNAMIC_LIBRARY
+#endif
 
 namespace simulators {
 
-    class Simulator : public display::Timestep {
+    class ARGUS_SIMULATION_API Simulator : public display::Timestep {
     protected:
         std::unique_ptr<Integrator> mIntegrator;
 

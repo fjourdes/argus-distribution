@@ -11,7 +11,7 @@
 
 namespace display {
 
-class Drawable {
+class ARGUS_DISPLAY_API Drawable {
 private:
     enum DataName {
         VERTEX, COORDINATE, COLOR, NORMAL, ELEMENT, numData

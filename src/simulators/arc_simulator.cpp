@@ -2,17 +2,18 @@
 // Created by jie on 9/7/18.
 //
 
-#include "io.hpp"
+#include <io.hpp>
 #include "arc_simulator.h"
-#include "proximity.hpp"
-#include "magic.hpp"
-#include "physics.hpp"
-#include "log.hpp"
-#include "mergehelper.hpp"
-#include "mergeimpacts.hpp"
-#include "dynamicremesh.hpp"
-#include "sparse_solver.hpp"
-#include "separate.hpp"
+#include <util.hpp>
+#include <proximity.hpp>
+#include <magic.hpp>
+#include <physics.hpp>
+#include <log.hpp>
+#include <mergehelper.hpp>
+#include <mergeimpacts.hpp>
+#include <dynamicremesh.hpp>
+#include <sparse_solver.hpp>
+#include <separate.hpp>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 

@@ -11,13 +11,19 @@
 #include <bvh.hpp>
 #include <glm/glm.hpp>
 
+#ifdef _WIN32
+#undef near
+#undef far
+#endif
+
 namespace display {
 
 class Camera {
 private:
     // double distance;
     double fov;
-    double near, far;
+    double near;
+    double far;
     int winWidth, winHeight;
     glm::vec3 worldUp;
 

@@ -15,7 +15,7 @@ namespace display {
 #define WIDTH 1080
 #define HEIGHT 720
 
-class Interface
+class ARGUS_DISPLAY_API Interface
 {
 private:
     static std::shared_ptr<Timestep> mTimestep;

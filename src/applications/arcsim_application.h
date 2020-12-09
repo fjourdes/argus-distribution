@@ -6,9 +6,10 @@
 #define ARGUS_DISTRIBUTION_ARCSIM_APPLICATION_H
 
 #include "application.h"
+
 namespace applications {
 
-    class ArcsimApplication : public Application {
+    class ARGUS_APPLICATION_API ArcsimApplication : public Application {
     private:
 
     public:

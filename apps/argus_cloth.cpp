@@ -3,9 +3,10 @@
 //
 
 #include <iostream>
-#include "applications/arcsim_application.h"
-#include "simulators/arc_simulator.h"
-#include "integrators/bogus_integrator.h"
+#include <applications/arcsim_application.h>
+#include <simulators/arc_simulator.h>
+#include <integrators/bogus_integrator.h>
+#include <magic.hpp>
 
 int main(int argc, char const* argv[]) {
 

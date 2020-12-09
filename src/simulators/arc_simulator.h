@@ -6,15 +6,17 @@
 #define ARGUS_DISTRIBUTION_ARC_SIMULATOR_H
 
 #include "simulator.h"
-#include "simulation.hpp"
-#include "collision.hpp"
+#include <simulation.hpp>
+#include <collision.hpp>
+
+
 
 const static float clothColor[3] = {0.5, 0.5, 1};
 const static float obsColor[3] = {0.5, 0.5, 0.5};
 
 namespace simulators {
 
-    class ARCSimulator : public Simulator {
+    class ARGUS_SIMULATION_API ARCSimulator : public Simulator {
     private:
         arcsim::Simulation &mSim;
 
