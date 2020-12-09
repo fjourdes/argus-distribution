@@ -13,8 +13,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 # Visual studio solution directories.
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+
+include(GNUInstallDirs)
+
 if((CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT))
-    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Prefix prepended to install directories" FORCE)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/build/apps" CACHE PATH "Prefix prepended to install directories" FORCE)
     message(STATUS "Setting default CMAKE_INSTALL_PREFIX to: ${CMAKE_INSTALL_PREFIX}")
 endif()
 

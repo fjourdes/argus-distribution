@@ -5,7 +5,7 @@ import datetime
 import re
 
 # This is the executable (argus) file path. Change it correspondingly.
-ARGUS = 'build/apps/argus-cloth'
+ARGUS = 'build/apps/bin/argus-cloth'
 
 python_path = os.path.dirname(os.path.realpath(__file__))
 working_dir = os.path.dirname(python_path)
