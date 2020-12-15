@@ -423,6 +423,11 @@ vector<arcsim::Vec3> convert_2_output(const argus::DynVec &v) {
     return output;
 }
 
+BogusIntegrator::BogusIntegrator(argus::SolverOptions options)
+:mOptions(options)
+{
+}
+
 vector<pair<arcsim::Vec3, arcsim::Vec3> > BogusIntegrator::solve(const arcsim::SpMat<arcsim::Mat3x3> &A, const vector<arcsim::Vec3> &b, vector<arcsim::Vec3> &linear_v,
                                  const vector<arcsim::ArgusImpact> &argusImpacts,  arcsim::Mesh &mesh, const double dt) {
     argus::ClothFrictionData data;
@@ -447,8 +452,6 @@ vector<pair<arcsim::Vec3, arcsim::Vec3> > BogusIntegrator::solve(const arcsim::S
     argus::DynMat3 &affineVel = data.affineVel;
 
     initial_contact_info(argusImpacts, mesh, mu, contactBasis, indicesA, coordsA, indicesB, coordsB, affineVel, dt);
-    argus::SolverOptions options ;
-    options.tolerance = arcsim::magic.argus_tolerance;
 
     bool scale_by_mass_inv = false;
     argus::DynVec m_inv_vector;
@@ -470,7 +473,12 @@ vector<pair<arcsim::Vec3, arcsim::Vec3> > BogusIntegrator::solve(const arcsim::S
     // DynVec v( data.M.rows() );
     // v.setZero();
 
-    if (!arcsim::magic.facet_solver) {
+    const bool isNodalSolver = mOptions.algorithm == argus::SolverOptions::Algorithm::NodalContact ||
+                               mOptions.algorithm == argus::SolverOptions::Algorithm::NodalSelfContact ||
+                               mOptions.algorithm == argus::SolverOptions::Algorithm::TotalContact;
+
+    if (isNodalSolver)
+    {
         data.findAndDuplicate() ;
         v = data.S*v;
     }
@@ -481,10 +489,10 @@ vector<pair<arcsim::Vec3, arcsim::Vec3> > BogusIntegrator::solve(const arcsim::S
     }
 
     if (scale_by_mass_inv) {
-        options.m_inv.clear();
+        mOptions.m_inv.clear();
         argus::DynVec extended_m_inv = data.S*m_inv_vector;
         for (int i = 0; i < extended_m_inv.size()/3; i++) {
-            options.m_inv.push_back(extended_m_inv.segment(3*i, 3)[0]);
+            mOptions.m_inv.push_back(extended_m_inv.segment(3*i, 3)[0]);
         }
     }
 
@@ -494,9 +502,7 @@ vector<pair<arcsim::Vec3, arcsim::Vec3> > BogusIntegrator::solve(const arcsim::S
     r.setZero();
 
     // options.nodalConstraintStepSize = 1e-1;
-    if (arcsim::magic.facet_solver) {
-        options.algorithm = argus::SolverOptions::Algorithm::ICAGaussSeidel;
-        options.faceted = true;
+    if (mOptions.faceted ) {
         argus::DynVec last_v(mesh.nodes.size()*3);
         // last_v.setZero();
         for (int n = 0; n < mesh.nodes.size(); n++) {
@@ -505,10 +511,6 @@ vector<pair<arcsim::Vec3, arcsim::Vec3> > BogusIntegrator::solve(const arcsim::S
             last_v.segment(n*3, 3) << cur_v[0], cur_v[1], cur_v[2];
         }
         data.alignTangentsWithVelocity(last_v);
-    } else {
-        options.maxOuterIterations = 0;
-        options.maxIterations = 2e3;
-        options.algorithm = argus::SolverOptions::Algorithm::NodalSelfContact;
     }
 
     // if (::magic.use_eigen_solver) {
@@ -522,15 +524,15 @@ vector<pair<arcsim::Vec3, arcsim::Vec3> > BogusIntegrator::solve(const arcsim::S
     // } else {
     // 	solver.solve( options, v, r, stats ) ;
     // }
-    solver.solve(options, v, r, stats);
+    solver.solve(mOptions, v, r, stats);
 
-    // solver.contactSolve( options, v, r, stats);
+    //solver.contactSolve( mOptions, v, r, stats);
 
     arcsim::Log::getInstance()->setError(stats.error);
     arcsim::Log::getInstance()->setContactSolveTime(stats.time);
     arcsim::Log::getInstance()->setIterations(stats.nIterations);
 
-    if (!arcsim::magic.facet_solver) {
+    if (isNodalSolver) {
 
         v = data.S.transpose()*v;
         v *= (A_scale/b_scale);

@@ -11,6 +11,8 @@
 #include <magic.hpp>
 #include <simulators/arc_simulator.h>
 #include <integrators/bogus_integrator.h>
+#include <SolverOptions.hh>
+#include <json/reader.h>
 
 namespace applications {
 
@@ -20,9 +22,128 @@ namespace applications {
     string inprefix, outprefix;
     int frameskip;
 
+    void complain(const Json::Value& json, const string& expected) {
+        cout << "Expected " << expected << ", found " << json.asString() << " instead" << endl;
+        abort();
+    }
+
+    void parse(bool& b, const Json::Value& json) {
+        if (!json.isBool()) complain(json, "boolean");
+        b = json.asBool();
+    }
+
+    void parse(unsigned& n, const Json::Value& json) {
+        if (!json.isIntegral()) complain(json, "unsigned");
+        n = json.asUInt();
+    }
+
+
+    void parse(int& n, const Json::Value& json) {
+        if (!json.isIntegral()) complain(json, "integer");
+        n = json.asInt();
+    }
+
+    void parse(double& x, const Json::Value& json) {
+        if (!json.isNumeric()) complain(json, "real");
+        x = json.asDouble();
+    }
+
+    void parse(string& s, const Json::Value& json) {
+        if (!json.isString()) complain(json, "string");
+        s = json.asString();
+    }
+
+    void parse(argus::SolverOptions::Algorithm& algorithm, const Json::Value& json) {
+        
+        using argus::SolverOptions;
+        
+        if (!json.isString()) complain(json, "string");
+
+        std::string s = json.asString();
+
+        if( s == "NodalContact" ) algorithm = SolverOptions::Algorithm::NodalContact;
+        else if (s == "AlternatingMinimization") algorithm = SolverOptions::Algorithm::AlternatingMinimization;
+        else if (s == "DualProjectedGradient") algorithm = SolverOptions::Algorithm::DualProjectedGradient;
+        else if (s == "DualGaussSeidel") algorithm = SolverOptions::Algorithm::DualGaussSeidel;
+        else if (s == "NodalSelfContact") algorithm = SolverOptions::Algorithm::NodalSelfContact;
+        else if (s == "TotalContact") algorithm = SolverOptions::Algorithm::TotalContact;
+        else if (s == "ICAGaussSeidel") algorithm = SolverOptions::Algorithm::ICAGaussSeidel;
+        else complain(json,"algorithm");
+
+    }
+
+    template<typename T>
+    void parse(T& x, const Json::Value& json, const T& x0) {
+        if (json.isNull())
+            x = x0;
+        else
+            parse(x, json);
+    }
+
+
+    void load_json_solver_options(const string& json_file, argus::SolverOptions& options)
+    {
+        Json::Value json;
+        Json::Reader reader;
+        ifstream file(json_file.c_str());
+        bool parsingSuccessful = reader.parse(file, json);
+        if (!parsingSuccessful) {
+            fprintf(stderr, "Error reading file: %s\n", json_file.c_str());
+            fprintf(stderr, "%s", reader.getFormatedErrorMessages().c_str());
+            abort();
+        }
+        file.close();
+      
+        // keep backward compatiblity by defining some default properties using the arcsim::magic global variable
+        argus::SolverOptions::Algorithm defaultAlgorithm = arcsim::magic.facet_solver ? argus::SolverOptions::Algorithm::ICAGaussSeidel : 
+                                                                                        argus::SolverOptions::Algorithm::NodalSelfContact;
+        auto& solverOptions = json["options"];
+        parse(options.algorithm, solverOptions["algorithm"], defaultAlgorithm);
+        parse(options.tolerance, solverOptions["tolerance"], arcsim::magic.argus_tolerance);
+        parse(options.useInfinityNorm, solverOptions["useInfinityNorm"], false);
+
+        unsigned defaultMaxOuterIterations = 25u;
+        unsigned defaultMaxIterations = 500u;
+
+        const bool isNodalSolver =  
+            options.algorithm == argus::SolverOptions::Algorithm::NodalContact ||
+            options.algorithm == argus::SolverOptions::Algorithm::NodalSelfContact ||
+            options.algorithm == argus::SolverOptions::Algorithm::TotalContact;
+
+        if (isNodalSolver)
+        {
+            // default values initially provided in bogus_integrator.cpp
+            defaultMaxOuterIterations = 0u;
+            defaultMaxIterations = 2e3;
+        }
+
+        parse(options.maxIterations, solverOptions["maxIterations"], defaultMaxIterations);
+        parse(options.maxOuterIterations, solverOptions["maxOuterIterations"], defaultMaxOuterIterations);
+        parse(options.lineSearchIterations, solverOptions["lineSearchIterations"], 8u);
+        parse(options.amaFpStepSize, solverOptions["amaFpStepSize"], 0.05);
+        parse(options.amaProjStepSize, solverOptions["amaProjStepSize"], 1.e-3);
+        parse(options.nodalConstraintStepSize, solverOptions["nodalConstraintStepSize"], 1.5);
+        parse(options.nodalConstraintIterations, solverOptions["nodalConstraintIterations"], 0);
+        parse(options.nodalGSAutoRegularization, solverOptions["nodalGSAutoRegularization"], 1.e-3);
+        parse(options.nodalGSLocalTolerance, solverOptions["nodalGSLocalTolerance"], std::pow(std::numeric_limits< double >::epsilon(), .75) );
+        parse(options.faceted, solverOptions["faceted"], arcsim::magic.facet_solver);
+        parse(options.AScale, solverOptions["AScale"], 1.);
+        parse(options.bScale, solverOptions["bScale"], 1.);
+        parse(options.evalScale, solverOptions["evalScale"], 1.);
+        parse(options.useColoring, solverOptions["useColoring"], false);
+
+
+        //
+        //options.maxIterations = 2e3;
+    }
+
+
     void init_physics(const string &json_file,
-                      bool is_reloading, arcsim::Simulation &sim) {
+                      bool is_reloading, arcsim::Simulation &sim, argus::SolverOptions& options) {
         load_json(json_file, sim);
+
+        load_json_solver_options(json_file, options);
+
         if (!outprefix.empty()) {
             timingfile = arcsim::stringf("%s/timing", outprefix.c_str()).c_str();
             fstream tfs;
@@ -70,13 +191,14 @@ namespace applications {
         if (!outprefix.empty())
             arcsim::ensure_existing_directory(outprefix);
         arcsim::Simulation sim;
-        init_physics(json_file, false, sim);
+        argus::SolverOptions options;
+        init_physics(json_file, false, sim, options);
         sim.frame = 0;
         sim.time = 0;
         sim.step = 0;
         if (!outprefix.empty())
             save_objs(sim.cloth_meshes, arcsim::stringf("%s/%06d", outprefix.c_str(), 0));
-        std::shared_ptr<simulators::Simulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(), sim, timingfile, outprefix);
+        std::shared_ptr<simulators::Simulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(options), sim, timingfile, outprefix);
         display::Interface i(simulator);
         i.run();
     }
@@ -95,25 +217,26 @@ namespace applications {
         if (!outprefix.empty())
             arcsim::ensure_existing_directory(outprefix);
         arcsim::Simulation sim;
-        init_physics(json_file, false, sim);
+        argus::SolverOptions options;
+        init_physics(json_file, false, sim, options);
         sim.frame = 0;
         sim.time = 0;
         sim.step = 0;
         if (!outprefix.empty())
             save_objs(sim.cloth_meshes, arcsim::stringf("%s/%06d", outprefix.c_str(), 0));
-        std::shared_ptr<simulators::Simulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(), sim, timingfile, outprefix);
+        std::shared_ptr<simulators::Simulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(options), sim, timingfile, outprefix);
         while (true) {
             simulator->step();
         }
     }
 
-    void init_resume(const vector<string> &args, arcsim::Simulation &sim) {
+    void init_resume(const vector<string> &args, arcsim::Simulation &sim, argus::SolverOptions& options) {
         isResume = true;
         assert(args.size() == 2);
         outprefix = args[0];
         string start_frame_str = args[1];
         // Load like we would normally begin physics
-        init_physics(arcsim::stringf("%s/conf.json", outprefix.c_str()), true, sim);
+        init_physics(arcsim::stringf("%s/conf.json", outprefix.c_str()), true, sim, options);
         // Get the initialization information
         sim.frame = atoi(start_frame_str.c_str());
         sim.time = sim.frame * sim.frame_time;
@@ -153,8 +276,9 @@ namespace applications {
             exit(EXIT_FAILURE);
         }
         arcsim::Simulation sim;
-        init_resume(args, sim);
-        std::shared_ptr<simulators::Simulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(), sim, timingfile, outprefix);
+        argus::SolverOptions options;
+        init_resume(args, sim, options);
+        std::shared_ptr<simulators::Simulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(options), sim, timingfile, outprefix);
         display::Interface i(simulator);
         i.run();
     }
@@ -169,8 +293,9 @@ namespace applications {
             exit(EXIT_FAILURE);
         }
         arcsim::Simulation sim;
-        init_resume(args, sim);
-        std::shared_ptr<simulators::Simulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(), sim, timingfile, outprefix);
+        argus::SolverOptions options;
+        init_resume(args, sim, options);
+        std::shared_ptr<simulators::Simulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(options), sim, timingfile, outprefix);
         while (true) {
             simulator->step();
         }
@@ -194,10 +319,12 @@ namespace applications {
         char config_backup_name[256];
         snprintf(config_backup_name, 256, "%s/%s", inprefix.c_str(), "conf.json");
         arcsim::Simulation sim;
+        argus::SolverOptions options;
         sim.frame = 0;
         load_json(config_backup_name, sim);
+        load_json_solver_options(config_backup_name, options);
         prepare(sim);
-        std::shared_ptr<simulators::ARCSimulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(), sim, timingfile, outprefix, true);
+        std::shared_ptr<simulators::ARCSimulator> simulator = make_shared<simulators::ARCSimulator>(std::make_unique<BogusIntegrator>(options), sim, timingfile, outprefix, true);
         simulator->setInputPrefix(inprefix);
         simulator->setFrameskip(frameskip);
         display::Interface i(simulator);
