@@ -365,14 +365,12 @@ namespace simulators {
             vd->addVisualPoint3(p, arcsim::Vec3(0, 0, 1), 'a');
             vd->addVisualLine3(p, p + impact.n * .05, arcsim::Vec3(0, 0, 1), 'a');
 
-            char switchChar;
             arcsim::Vec3 color;
 
-
-            vd->addVisualPoint3(p2, color, switchChar);
-            vd->addVisualPoint3(p, color, switchChar);
+            vd->addVisualPoint3(p2, color, 'a');
+            vd->addVisualPoint3(p, color, 'a');
             //vd->addVisualLine3(p2,p,color,switchChar);
-            vd->addVisualLine3(p2, p2 + 0.05 * impact.n, color, switchChar);
+            vd->addVisualLine3(p2, p2 + 0.05 * impact.n, color, 'a');
             //vd->addVisualLine3(p,p-0.05*impact.n, color, switchChar);
 
 
