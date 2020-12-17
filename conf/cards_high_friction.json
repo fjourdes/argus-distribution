@@ -34,7 +34,14 @@
     "disable": ["proximity"],
     "magic": {"projection_thickness": 1e-3, "friction_coeff": 0.6, "repulsion_thickness": 2e-3, "collision_stiffness": 1e6, "fixed_high_res_mesh": false, "merge_proximal_impacts": false,
 			  "proximity_collisions": true, "self_contact": true, "face_edge_constraints": false, "VE" : true, "EV" : true, "VV" : true,
-			"detection_thickness": 2e-3, "sim_type": "argus", "argus_tolerance":1e-12 }
+			"detection_thickness": 2e-3, "sim_type": "argus", "argus_tolerance":1e-12 },
+
+
+    "options": { "algorithm":"NodalSelfContact","maxOuterIterations":0,"maxIterations":500 }
+    //"options": { "algorithm":"DualProjectedGradient", "maxOuterIterations":5,"maxIterations":100, "projectedGradientVariant":3 }
+    //"options": { "algorithm":"ICAGaussSeidel", "maxOuterIterations":100,"maxIterations":50 }
+    // does not work "options": { "algorithm":"AlternatingMinimization", "maxOuterIterations":25,"maxIterations":500, "amaFpStepSize":0.5, "amaProjStepSize":0.001 }
+
 }
 
 
