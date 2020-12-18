@@ -6,3 +6,6 @@
 	path = deps/bogus-interface
 	url = https://github.com/fjourdes/bogus-interface.git
 	branch = main
+[submodule "deps/eigen"]
+	path = deps/eigen
+	url = https://github.com/fjourdes/eigen.git
