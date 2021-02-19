@@ -44,6 +44,8 @@ set(ARCSIM_WITH_BOOST  ON CACHE INTERNAL "")
 
 option(BUILD_SHARED_LIBS "" ON)
 
+add_subdirectory(${PROJECT_SOURCE_DIR}/deps/eigen)
+
 find_package(Eigen3 REQUIRED)
 
 # add_definitions(-DSILENCE_ARGUS)
